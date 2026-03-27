@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>המנקה - מנקה קבצים חכם</title>
+<style>
+:root {
+    --blue: #1a78e0;
+    --teal: #38b89e;
+    --cyan: #4dd4e6;
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2129;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --danger: #f85149;
+    --warning: #e8a44a;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    user-select: none;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+.sidebar-header {
+    padding: 24px 20px 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+}
+.sidebar-header .icon {
+    font-size: 32px;
+    margin-bottom: 4px;
+    background: linear-gradient(135deg, var(--blue), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.sidebar-header h1 {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+.sidebar-section { padding: 12px; }
+.scan-btn {
+    width: 100%;
+    padding: 10px;
+    background: linear-gradient(135deg, var(--blue), var(--teal));
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.scan-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.scan-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.scan-btn .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+}
+.scan-btn.scanning .spinner { display: inline-block; }
+.scan-btn.scanning .btn-text { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Settings */
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+}
+.setting-row select, .setting-row input[type=number] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 4px 8px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    width: 70px;
+}
+.setting-label { font-size: 0.75rem; color: var(--text-dim); margin: 12px 0 6px; font-weight: 600; }
+
+/* Locations checkboxes */
+.loc-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    cursor: pointer;
+}
+.loc-item input { accent-color: var(--blue); }
+
+/* Categories */
+.cat-list { flex: 1; overflow-y: auto; padding: 8px 12px; }
+.cat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    transition: all 0.15s;
+    margin-bottom: 2px;
+}
+.cat-item:hover { background: rgba(255,255,255,0.04); }
+.cat-item.active { background: rgba(26,120,224,0.15); color: var(--text); }
+.cat-badge {
+    font-size: 0.7rem;
+    background: rgba(255,255,255,0.08);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+/* Summary */
+.sidebar-summary {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+}
+.summary-label { font-size: 0.75rem; color: var(--text-dim); }
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--warning);
+    margin-top: 4px;
+}
+
+/* Main content */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Toolbar */
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    width: 260px;
+}
+.search-box input {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.85rem;
+    outline: none;
+    width: 100%;
+}
+.search-icon { color: var(--text-dim); font-size: 0.85rem; }
+.toolbar-spacer { flex: 1; }
+.toolbar-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-dim);
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.toolbar-btn:hover { color: var(--text); border-color: #444c56; }
+
+/* Table header */
+.table-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+.col-check { width: 36px; text-align: center; }
+.col-name { flex: 1; }
+.col-cat { width: 90px; text-align: center; }
+.col-size { width: 90px; text-align: left; }
+.col-age { width: 100px; text-align: left; }
+.col-action { width: 40px; }
+
+/* File list */
+.file-list {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+.file-row {
+    display: flex;
+    align-items: center;
+    padding: 9px 16px;
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+    transition: background 0.1s;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+.file-row:hover { background: rgba(255,255,255,0.02); }
+.file-row.selected { background: rgba(26,120,224,0.08); }
+.file-row input[type=checkbox] { accent-color: var(--blue); }
+.file-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.file-name .icon { font-size: 1rem; }
+.file-name .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 350px; }
+.file-name .parent { font-size: 0.7rem; color: var(--text-dim); margin-top: 1px; }
+.file-cat {
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.06);
+}
+.file-size { font-family: 'Consolas', monospace; font-size: 0.82rem; }
+.file-size.large { color: var(--danger); font-weight: 600; }
+.file-size.medium { color: var(--warning); }
+.file-age { color: var(--warning); font-size: 0.82rem; }
+.reveal-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+.reveal-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+/* Empty / Welcome state */
+.empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--text-dim);
+}
+.empty-state .big-icon { font-size: 64px; opacity: 0.4; }
+.empty-state h2 { font-size: 1.4rem; color: var(--text); }
+.empty-state p { font-size: 0.95rem; max-width: 400px; text-align: center; }
+
+/* Progress */
+.progress-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+.progress-bar-container {
+    width: 300px;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--teal));
+    border-radius: 3px;
+    transition: width 0.3s;
+    animation: progressPulse 1.5s ease-in-out infinite;
+    width: 30%;
+}
+@keyframes progressPulse {
+    0%,100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* Bottom bar */
+.bottom-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+}
+.status-text { font-size: 0.82rem; color: var(--text-dim); flex: 1; }
+.selection-info { font-size: 0.85rem; font-weight: 600; color: var(--blue); }
+.action-btn {
+    padding: 7px 18px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.action-btn.trash {
+    background: rgba(26,120,224,0.1);
+    border-color: rgba(26,120,224,0.3);
+    color: var(--blue);
+}
+.action-btn.trash:hover { background: rgba(26,120,224,0.2); }
+.action-btn.delete {
+    background: rgba(248,81,73,0.1);
+    border-color: rgba(248,81,73,0.3);
+    color: var(--danger);
+}
+.action-btn.delete:hover { background: rgba(248,81,73,0.2); }
+.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Modal */
+.modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    display: none;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 420px;
+    width: 90%;
+}
+.modal h3 { margin-bottom: 12px; font-size: 1.1rem; }
+.modal p { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 20px; }
+.modal-buttons { display: flex; gap: 10px; justify-content: flex-start; }
+.modal-btn {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 600;
+}
+.modal-btn.cancel { background: var(--surface2); color: var(--text); }
+.modal-btn.confirm-trash { background: var(--blue); border-color: var(--blue); color: white; }
+.modal-btn.confirm-delete { background: var(--danger); border-color: var(--danger); color: white; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="icon">&#10024;</div>
+        <h1>המנקה</h1>
+    </div>
+
+    <div class="sidebar-section">
+        <button class="scan-btn" id="scanBtn" onclick="startScan()">
+            <span class="spinner"></span>
+            <span class="btn-text">&#128269; סרוק עכשיו</span>
+        </button>
+    </div>
+
+    <div class="sidebar-section" style="border-bottom:1px solid var(--border); padding-bottom:12px;">
+        <div class="setting-row">
+            <span>ישן מ-</span>
+            <div><input type="number" id="months" value="3" min="1" max="24" style="width:50px"> חודשים</div>
+        </div>
+        <div class="setting-label">&#128193; תיקיות לסריקה</div>
+        <label class="loc-item"><input type="checkbox" value="downloads" checked> הורדות</label>
+        <label class="loc-item"><input type="checkbox" value="desktop" checked> שולחן עבודה</label>
+        <label class="loc-item"><input type="checkbox" value="documents" checked> מסמכים</label>
+        <label class="loc-item"><input type="checkbox" value="pictures"> תמונות</label>
+        <label class="loc-item"><input type="checkbox" value="videos"> סרטונים</label>
+        <label class="loc-item"><input type="checkbox" value="music"> מוזיקה</label>
+    </div>
+
+    <div class="cat-list" id="catList">
+        <div class="setting-label">&#127991;&#65039; קטגוריות</div>
+    </div>
+
+    <div class="sidebar-summary" id="summary" style="display:none;">
+        <div class="summary-label">ניתן לפנות:</div>
+        <div class="summary-value" id="totalSizeDisplay">0</div>
+    </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+    <!-- Toolbar -->
+    <div class="toolbar" id="toolbar" style="display:none;">
+        <div class="search-box">
+            <span class="search-icon">&#128269;</span>
+            <input type="text" placeholder="חיפוש קבצים..." id="searchInput" oninput="renderFiles()">
+        </div>
+        <div class="toolbar-spacer"></div>
+        <select id="sortSelect" onchange="renderFiles()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-dim);padding:6px 12px;font-family:inherit;font-size:0.8rem;">
+            <option value="sizeDesc">גודל (גדול לקטן)</option>
+            <option value="sizeAsc">גודל (קטן לגדול)</option>
+            <option value="oldest">הכי ישן קודם</option>
+            <option value="newest">הכי חדש קודם</option>
+            <option value="name">שם</option>
+        </select>
+        <button class="toolbar-btn" onclick="selectAll()">&#9745; בחר הכל</button>
+        <button class="toolbar-btn" onclick="deselectAll()">&#9746; נקה בחירה</button>
+    </div>
+
+    <!-- Table Header -->
+    <div class="table-header" id="tableHeader" style="display:none;">
+        <div class="col-check"><input type="checkbox" id="checkAll" onchange="toggleAll(this.checked)"></div>
+        <div class="col-name">שם קובץ</div>
+        <div class="col-cat">קטגוריה</div>
+        <div class="col-size">גודל</div>
+        <div class="col-age">לא נגעו</div>
+        <div class="col-action"></div>
+    </div>
+
+    <!-- Content area -->
+    <div id="contentArea">
+        <div class="empty-state">
+            <div class="big-icon">&#10024;</div>
+            <h2>המנקה</h2>
+            <p>מנקה קבצים חכם לווינדוז.<br>לחץ על "סרוק עכשיו" כדי למצוא קבצים ישנים ולשחרר מקום.</p>
+        </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottom-bar">
+        <span class="status-text" id="statusText">&#9432; לחץ על 'סרוק' כדי להתחיל</span>
+        <span class="selection-info" id="selectionInfo" style="display:none;"></span>
+        <button class="action-btn trash" id="trashBtn" onclick="confirmTrash()" disabled>&#128465; העבר לסל מיחזור</button>
+        <button class="action-btn delete" id="deleteBtn" onclick="confirmDelete()" disabled>&#10006; מחק לצמיתות</button>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" id="modal">
+    <div class="modal">
+        <h3 id="modalTitle">אישור</h3>
+        <p id="modalText"></p>
+        <div class="modal-buttons">
+            <button class="modal-btn cancel" onclick="closeModal()">ביטול</button>
+            <button class="modal-btn" id="modalConfirmBtn" onclick="executeAction()">אישור</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let allFiles = [];
+let selectedPaths = new Set();
+let currentCategory = 'all';
+let pendingAction = null;
+
+const catNames = {
+    all: 'הכל', images: 'תמונות', videos: 'סרטונים', documents: 'מסמכים',
+    archives: 'ארכיונים', audio: 'מוזיקה', code: 'קוד', other: 'אחר'
+};
+const catIcons = {
+    all: '&#128193;', images: '&#127912;', videos: '&#127916;', documents: '&#128196;',
+    archives: '&#128230;', audio: '&#127925;', code: '&#128187;', other: '&#128196;'
+};
+
+function formatSize(bytes) {
+    if (bytes >= 1e9) return (bytes/1e9).toFixed(1) + ' GB';
+    if (bytes >= 1e6) return (bytes/1e6).toFixed(1) + ' MB';
+    if (bytes >= 1e3) return (bytes/1e3).toFixed(1) + ' KB';
+    return bytes + ' B';
+}
+
+function formatAge(days) {
+    if (days < 30) return days + ' ימים';
+    if (days < 365) return Math.floor(days/30) + ' חודשים';
+    return Math.floor(days/365) + ' שנים';
+}
+
+function sizeClass(bytes) {
+    if (bytes > 500_000_000) return 'large';
+    if (bytes > 100_000_000) return 'medium';
+    return '';
+}
+
+async function startScan() {
+    const btn = document.getElementById('scanBtn');
+    btn.classList.add('scanning');
+    btn.disabled = true;
+
+    const months = parseInt(document.getElementById('months').value) || 3;
+    const locations = [...document.querySelectorAll('.loc-item input:checked')].map(cb => cb.value);
+
+    document.getElementById('toolbar').style.display = 'none';
+    document.getElementById('tableHeader').style.display = 'none';
+    document.getElementById('contentArea').innerHTML = `
+        <div class="progress-state">
+            <div style="font-size:48px;">&#128269;</div>
+            <h3>סורק קבצים...</h3>
+            <div class="progress-bar-container"><div class="progress-bar-fill"></div></div>
+            <p style="color:var(--text-dim);font-size:0.9rem;">מחפש קבצים שלא נגעת בהם ${months} חודשים...</p>
+        </div>`;
+
+    document.getElementById('statusText').textContent = 'סורק...';
+
+    try {
+        const res = await fetch('/api/scan', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ months, minSizeMB: 0, locations })
+        });
+        const data = await res.json();
+        allFiles = data.files || [];
+        selectedPaths.clear();
+        currentCategory = 'all';
+
+        document.getElementById('statusText').textContent =
+            `נמצאו ${allFiles.length} קבצים (${formatSize(data.totalSize)})`;
+
+        document.getElementById('toolbar').style.display = 'flex';
+        document.getElementById('tableHeader').style.display = allFiles.length ? 'flex' : 'none';
+        document.getElementById('summary').style.display = allFiles.length ? 'block' : 'none';
+        document.getElementById('totalSizeDisplay').textContent = formatSize(data.totalSize);
+
+        renderCategories();
+        renderFiles();
+    } catch (err) {
+        document.getElementById('contentArea').innerHTML = `
+            <div class="empty-state">
+                <div class="big-icon">&#9888;&#65039;</div>
+                <h2>שגיאה בסריקה</h2>
+                <p>${err.message}</p>
+            </div>`;
+        document.getElementById('statusText').textContent = 'שגיאה בסריקה';
+    }
+
+    btn.classList.remove('scanning');
+    btn.disabled = false;
+}
+
+function renderCategories() {
+    const stats = {};
+    allFiles.forEach(f => {
+        if (!stats[f.category]) stats[f.category] = { count: 0, size: 0 };
+        stats[f.category].count++;
+        stats[f.category].size += f.size;
+    });
+
+    const catList = document.getElementById('catList');
+    catList.innerHTML = '<div class="setting-label">&#127991;&#65039; קטגוריות</div>';
+
+    // "All" category
+    const allItem = document.createElement('div');
+    allItem.className = 'cat-item' + (currentCategory === 'all' ? ' active' : '');
+    allItem.innerHTML = `<span>${catIcons.all} ${catNames.all}</span><span class="cat-badge">${allFiles.length}</span>`;
+    allItem.onclick = () => { currentCategory = 'all'; renderCategories(); renderFiles(); };
+    catList.appendChild(allItem);
+
+    const order = ['videos','archives','images','documents','audio','code','other'];
+    order.forEach(cat => {
+        if (!stats[cat]) return;
+        const item = document.createElement('div');
+        item.className = 'cat-item' + (currentCategory === cat ? ' active' : '');
+        item.innerHTML = `<span>${catIcons[cat] || ''} ${catNames[cat] || cat}</span><span class="cat-badge">${stats[cat].count}</span>`;
+        item.onclick = () => { currentCategory = cat; renderCategories(); renderFiles(); };
+        catList.appendChild(item);
+    });
+}
+
+function getFilteredFiles() {
+    let files = allFiles;
+    if (currentCategory !== 'all') files = files.filter(f => f.category === currentCategory);
+
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    if (search) files = files.filter(f => f.name.toLowerCase().includes(search));
+
+    const sort = document.getElementById('sortSelect').value;
+    switch(sort) {
+        case 'sizeDesc': files.sort((a,b) => b.size - a.size); break;
+        case 'sizeAsc': files.sort((a,b) => a.size - b.size); break;
+        case 'oldest': files.sort((a,b) => b.daysSince - a.daysSince); break;
+        case 'newest': files.sort((a,b) => a.daysSince - b.daysSince); break;
+        case 'name': files.sort((a,b) => a.name.localeCompare(b.name)); break;
+    }
+    return files;
+}
+
+function renderFiles() {
+    const files = getFilteredFiles();
+    const area = document.getElementById('contentArea');
+
+    if (files.length === 0) {
+        area.innerHTML = `
+            <div class="empty-state">
+                <div class="big-icon">&#9989;</div>
+                <h2>לא נמצאו קבצים</h2>
+                <p>לא נמצאו קבצים ישנים בקטגוריה זו.</p>
+            </div>`;
+        document.getElementById('tableHeader').style.display = 'none';
+        updateSelection();
+        return;
+    }
+
+    document.getElementById('tableHeader').style.display = 'flex';
+    area.innerHTML = '<div class="file-list" id="fileList"></div>';
+    const list = document.getElementById('fileList');
+
+    files.forEach(f => {
+        const row = document.createElement('div');
+        row.className = 'file-row' + (selectedPaths.has(f.path) ? ' selected' : '');
+        row.innerHTML = `
+            <div class="col-check"><input type="checkbox" ${selectedPaths.has(f.path)?'checked':''} onchange="toggleFile('${escPath(f.path)}', this.checked)"></div>
+            <div class="col-name file-name">
+                <span class="icon">${catIcons[f.category] || '&#128196;'}</span>
+                <div>
+                    <div class="name" title="${esc(f.name)}">${esc(f.name)}</div>
+                    <div class="parent">${esc(f.parentFolder)}</div>
+                </div>
+            </div>
+            <div class="col-cat"><span class="file-cat">${catNames[f.category] || f.category}</span></div>
+            <div class="col-size file-size ${sizeClass(f.size)}">${formatSize(f.size)}</div>
+            <div class="col-age file-age">${formatAge(f.daysSince)}</div>
+            <div class="col-action"><button class="reveal-btn" onclick="reveal('${escPath(f.path)}')" title="פתח בסייר">&#128194;</button></div>
+        `;
+        row.onclick = (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+            toggleFile(f.path);
+            renderFiles();
+        };
+        list.appendChild(row);
+    });
+
+    updateSelection();
+}
+
+function escPath(p) { return p.replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function toggleFile(path, force) {
+    if (force === true) selectedPaths.add(path);
+    else if (force === false) selectedPaths.delete(path);
+    else if (selectedPaths.has(path)) selectedPaths.delete(path);
+    else selectedPaths.add(path);
+    updateSelection();
+}
+
+function selectAll() {
+    getFilteredFiles().forEach(f => selectedPaths.add(f.path));
+    renderFiles();
+}
+
+function deselectAll() {
+    selectedPaths.clear();
+    renderFiles();
+}
+
+function toggleAll(checked) {
+    if (checked) selectAll();
+    else deselectAll();
+}
+
+function updateSelection() {
+    const count = selectedPaths.size;
+    const size = allFiles.filter(f => selectedPaths.has(f.path)).reduce((s,f) => s + f.size, 0);
+    const info = document.getElementById('selectionInfo');
+    const trashBtn = document.getElementById('trashBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+
+    if (count > 0) {
+        info.style.display = 'inline';
+        info.textContent = `נבחרו ${count} קבצים (${formatSize(size)})`;
+        trashBtn.disabled = false;
+        deleteBtn.disabled = false;
+    } else {
+        info.style.display = 'none';
+        trashBtn.disabled = true;
+        deleteBtn.disabled = true;
+    }
+}
+
+function confirmTrash() {
+    const count = selectedPaths.size;
+    const size = allFiles.filter(f => selectedPaths.has(f.path)).reduce((s,f) => s + f.size, 0);
+    pendingAction = 'trash';
+    document.getElementById('modalTitle').textContent = 'העברה לסל מיחזור';
+    document.getElementById('modalText').textContent = `האם להעביר ${count} קבצים (${formatSize(size)}) לסל המיחזור?`;
+    document.getElementById('modalConfirmBtn').className = 'modal-btn confirm-trash';
+    document.getElementById('modalConfirmBtn').textContent = 'העבר לסל';
+    document.getElementById('modal').classList.add('show');
+}
+
+function confirmDelete() {
+    const count = selectedPaths.size;
+    const size = allFiles.filter(f => selectedPaths.has(f.path)).reduce((s,f) => s + f.size, 0);
+    pendingAction = 'delete';
+    document.getElementById('modalTitle').textContent = 'מחיקה לצמיתות';
+    document.getElementById('modalText').textContent = `האם למחוק ${count} קבצים (${formatSize(size)}) לצמיתות? פעולה זו בלתי הפיכה!`;
+    document.getElementById('modalConfirmBtn').className = 'modal-btn confirm-delete';
+    document.getElementById('modalConfirmBtn').textContent = 'מחק לצמיתות';
+    document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+    document.getElementById('modal').classList.remove('show');
+    pendingAction = null;
+}
+
+async function executeAction() {
+    const action = pendingAction;
+    closeModal();
+    if (!action) return;
+
+    const paths = [...selectedPaths];
+    const endpoint = action === 'trash' ? '/api/trash' : '/api/delete';
+
+    try {
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ paths })
+        });
+        const data = await res.json();
+
+        // Remove deleted files from list
+        const deletedPaths = new Set(paths.slice(0, data.deleted));
+        allFiles = allFiles.filter(f => !deletedPaths.has(f.path));
+        selectedPaths.clear();
+
+        const verb = action === 'trash' ? 'הועברו לסל' : 'נמחקו לצמיתות';
+        document.getElementById('statusText').textContent = `${verb} ${data.deleted} קבצים (${formatSize(data.freed)})`;
+
+        const totalSize = allFiles.reduce((s,f) => s + f.size, 0);
+        document.getElementById('totalSizeDisplay').textContent = formatSize(totalSize);
+
+        renderCategories();
+        renderFiles();
+    } catch (err) {
+        document.getElementById('statusText').textContent = 'שגיאה: ' + err.message;
+    }
+}
+
+async function reveal(path) {
+    fetch('/api/reveal', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ path })
+    });
+}
+</script>
+</body>
+</html>
