@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>המנקה - מנקה קבצים חכם למק</title>
+    <meta name="description" content="המנקה - תוכנה חכמה לניקוי קבצים ישנים ולא נחוצים מהמק שלך. חינם ובקוד פתוח.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blue: #1a78e0;
+            --teal: #38b89e;
+            --cyan: #4dd4e6;
+            --dark-bg: #07090f;
+            --card-bg: rgba(255,255,255,0.04);
+            --card-border: rgba(255,255,255,0.08);
+            --text: #e8ecf4;
+            --text-dim: #8892a6;
+            --glow-blue: rgba(26,120,224,0.4);
+            --glow-teal: rgba(56,184,158,0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: var(--dark-bg);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.7;
+        }
+
+        /* Animated background */
+        .bg-effects {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-effects .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .bg-effects .orb-1 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, var(--glow-blue), transparent 70%);
+            top: -200px; right: -100px;
+            animation-delay: 0s;
+        }
+
+        .bg-effects .orb-2 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, var(--glow-teal), transparent 70%);
+            bottom: -150px; left: -100px;
+            animation-delay: -7s;
+        }
+
+        .bg-effects .orb-3 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(77,212,230,0.2), transparent 70%);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -14s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -40px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(40px, 30px) scale(1.02); }
+        }
+
+        /* Stars background */
+        .stars {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px; height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Content wrapper */
+        .content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            background: rgba(7,9,15,0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--card-border);
+            transition: all 0.3s;
+        }
+
+        nav .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        nav .logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--blue), var(--teal));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        nav .logo-text {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        nav .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav .nav-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-weight: 400;
+            transition: color 0.3s;
+        }
+
+        nav .nav-links a:hover {
+            color: var(--text);
+        }
+
+        .btn-download-nav {
+            padding: 8px 24px;
+            background: linear-gradient(135deg, var(--blue), var(--teal));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Heebo', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-download-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--glow-blue);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 800px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: var(--teal);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero-badge .dot {
+            width: 8px; height: 8px;
+            background: var(--teal);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.8s ease 0.1s both;
+        }
+
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--blue), var(--teal), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-dim);
+            max-width: 550px;
+            margin: 0 auto 3rem;
+            font-weight: 300;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, var(--blue), var(--teal));
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-family: 'Heebo', sans-serif;
+            font-weight: 700;
+            font-size: 1.15rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; right: 0; bottom: 0;
+            width: 300%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px var(--glow-blue);
+        }
+
+        .btn-primary svg {
+            width: 22px; height: 22px;
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 40px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            color: var(--text);
+            font-family: 'Heebo', sans-serif;
+            font-weight: 600;
+            font-size: 1.15rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+
+        .hero-meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2.5rem;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+
+        .hero-meta span {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hero-meta .check {
+            color: var(--teal);
+        }
+
+        /* App Preview */
+        .app-preview {
+            max-width: 1000px;
+            margin: -2rem auto 0;
+            padding: 0 2rem;
+            animation: fadeInUp 1s ease 0.5s both;
+        }
+
+        .app-preview .window {
+            background: linear-gradient(145deg, #1a1f2e, #141824);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow:
+                0 25px 80px rgba(0,0,0,0.5),
+                0 0 60px var(--glow-blue),
+                inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .app-preview .window-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .app-preview .window-dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+        }
+
+        .app-preview .window-dot.red { background: #ff5f57; }
+        .app-preview .window-dot.yellow { background: #ffbd2e; }
+        .app-preview .window-dot.green { background: #28c840; }
+
+        .app-preview .window-title {
+            flex: 1;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        .app-preview .window-content {
+            display: flex;
+            min-height: 400px;
+        }
+
+        .app-preview .sidebar {
+            width: 220px;
+            padding: 20px 16px;
+            border-left: 1px solid var(--card-border);
+            background: rgba(255,255,255,0.02);
+        }
+
+        .app-preview .sidebar-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .app-preview .sidebar-icon {
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        .app-preview .sidebar-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .app-preview .sidebar-btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, var(--blue), var(--teal));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Heebo', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+        }
+
+        .app-preview .sidebar-cat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .app-preview .sidebar-cat.active {
+            background: rgba(26,120,224,0.15);
+            color: var(--text);
+        }
+
+        .app-preview .sidebar-cat-count {
+            font-size: 0.75rem;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .app-preview .main-content {
+            flex: 1;
+            padding: 16px 20px;
+        }
+
+        .app-preview .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .app-preview .search-box {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            width: 200px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .app-preview .file-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .app-preview .file-row:nth-child(odd) {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .app-preview .file-row .file-check {
+            width: 16px; height: 16px;
+            border: 2px solid var(--card-border);
+            border-radius: 4px;
+            margin-left: 12px;
+            flex-shrink: 0;
+        }
+
+        .app-preview .file-row .file-check.checked {
+            background: var(--blue);
+            border-color: var(--blue);
+        }
+
+        .app-preview .file-row .file-icon {
+            margin-left: 10px;
+            font-size: 1rem;
+        }
+
+        .app-preview .file-row .file-name {
+            flex: 1;
+            color: var(--text);
+        }
+
+        .app-preview .file-row .file-size {
+            color: var(--teal);
+            font-weight: 600;
+            width: 80px;
+            text-align: left;
+        }
+
+        .app-preview .file-row .file-age {
+            color: #e8a44a;
+            width: 90px;
+            text-align: left;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 8rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            color: var(--text-dim);
+            font-size: 1.15rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--blue), var(--teal), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(255,255,255,0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        .feature-icon {
+            width: 56px; height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-icon.blue { background: rgba(26,120,224,0.15); }
+        .feature-icon.teal { background: rgba(56,184,158,0.15); }
+        .feature-icon.orange { background: rgba(232,164,74,0.15); }
+        .feature-icon.purple { background: rgba(160,100,230,0.15); }
+        .feature-icon.pink { background: rgba(230,80,120,0.15); }
+        .feature-icon.cyan { background: rgba(77,212,230,0.15); }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+        }
+
+        .feature-card p {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: 4rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--blue), var(--teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-item p {
+            color: var(--text-dim);
+            font-size: 1rem;
+        }
+
+        /* How it works */
+        .how-it-works {
+            padding: 6rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .step-number {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue), var(--teal));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .step-content h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .step-content p {
+            color: var(--text-dim);
+            font-size: 1rem;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 8rem 2rem;
+            text-align: center;
+        }
+
+        .cta-box {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 4rem;
+            background: linear-gradient(145deg, rgba(26,120,224,0.1), rgba(56,184,158,0.05));
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: 20%; right: 20%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--blue), var(--teal), transparent);
+        }
+
+        .cta h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .cta p {
+            color: var(--text-dim);
+            font-size: 1.15rem;
+            margin-bottom: 2rem;
+        }
+
+        .download-size {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-top: 1rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--card-border);
+        }
+
+        footer p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--teal);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav .nav-links a:not(.btn-download-nav) {
+                display: none;
+            }
+
+            .hero { padding: 7rem 1.5rem 3rem; }
+
+            .app-preview .window-content {
+                flex-direction: column;
+            }
+
+            .app-preview .sidebar {
+                width: 100%;
+                border-left: none;
+                border-bottom: 1px solid var(--card-border);
+                padding: 12px;
+            }
+
+            .app-preview .file-row .file-age { display: none; }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .step {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-box { padding: 2.5rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Background Effects -->
+<div class="bg-effects">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
+
+<div class="stars" id="stars"></div>
+
+<!-- Content -->
+<div class="content">
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-inner">
+            <a href="#" class="logo">
+                <div class="logo-icon">&#10024;</div>
+                <span class="logo-text">המנקה</span>
+            </a>
+            <div class="nav-links">
+                <a href="#features">תכונות</a>
+                <a href="#how">איך זה עובד</a>
+                <a href="https://github.com/arielaizn/hamenake" target="_blank">GitHub</a>
+                <a href="#download" class="btn-download-nav">הורדה</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                גרסה 1.0 זמינה כעת
+            </div>
+
+            <h1>
+                נקה את המק שלך
+                <br>
+                <span class="gradient-text">בקליק אחד</span>
+            </h1>
+
+            <p>המנקה מוצא קבצים ישנים שלא נגעת בהם חודשים, מראה לך בדיוק כמה מקום הם תופסים, ונותן לך לשחרר מקום בקלות.</p>
+
+            <div class="hero-buttons" id="download">
+                <a href="https://github.com/arielaizn/hamenake/releases/latest/download/HaMenake-Installer.dmg" class="btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    הורד למק
+                </a>
+                <a href="https://github.com/arielaizn/hamenake" target="_blank" class="btn-secondary">
+                    &#9733; GitHub
+                </a>
+            </div>
+
+            <div class="hero-meta">
+                <span><span class="check">&#10003;</span> חינם לגמרי</span>
+                <span><span class="check">&#10003;</span> קוד פתוח</span>
+                <span><span class="check">&#10003;</span> macOS 13+</span>
+                <span><span class="check">&#10003;</span> Apple Silicon</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Preview -->
+    <div class="app-preview fade-in">
+        <div class="window">
+            <div class="window-bar">
+                <div class="window-dot red"></div>
+                <div class="window-dot yellow"></div>
+                <div class="window-dot green"></div>
+                <div class="window-title">המנקה</div>
+            </div>
+            <div class="window-content">
+                <div class="main-content">
+                    <div class="toolbar">
+                        <div class="search-box">&#128269; חיפוש קבצים...</div>
+                        <div style="display:flex;gap:8px;">
+                            <span style="font-size:0.8rem;color:var(--text-dim);background:rgba(255,255,255,0.06);padding:4px 12px;border-radius:6px;">&#9745; בחר הכל</span>
+                            <span style="font-size:0.8rem;color:var(--text-dim);background:rgba(255,255,255,0.06);padding:4px 12px;border-radius:6px;">&#8645; מיון</span>
+                        </div>
+                    </div>
+                    <div class="file-row">
+                        <div class="file-check checked"></div>
+                        <span class="file-icon">&#127916;</span>
+                        <span class="file-name">project-demo-final-v3.mp4</span>
+                        <span class="file-size">2.4 GB</span>
+                        <span class="file-age">8 חודשים</span>
+                    </div>
+                    <div class="file-row">
+                        <div class="file-check checked"></div>
+                        <span class="file-icon">&#128230;</span>
+                        <span class="file-name">old-backup-2024.zip</span>
+                        <span class="file-size">1.8 GB</span>
+                        <span class="file-age">14 חודשים</span>
+                    </div>
+                    <div class="file-row">
+                        <div class="file-check"></div>
+                        <span class="file-icon">&#127912;</span>
+                        <span class="file-name">screenshot-2024-03-15.png</span>
+                        <span class="file-size">4.2 MB</span>
+                        <span class="file-age">12 חודשים</span>
+                    </div>
+                    <div class="file-row">
+                        <div class="file-check checked"></div>
+                        <span class="file-icon">&#128196;</span>
+                        <span class="file-name">design-spec-draft.pdf</span>
+                        <span class="file-size">18 MB</span>
+                        <span class="file-age">6 חודשים</span>
+                    </div>
+                    <div class="file-row">
+                        <div class="file-check"></div>
+                        <span class="file-icon">&#127925;</span>
+                        <span class="file-name">podcast-episode-42.mp3</span>
+                        <span class="file-size">95 MB</span>
+                        <span class="file-age">5 חודשים</span>
+                    </div>
+                    <div class="file-row">
+                        <div class="file-check checked"></div>
+                        <span class="file-icon">&#128230;</span>
+                        <span class="file-name">node_modules-backup.tar.gz</span>
+                        <span class="file-size">890 MB</span>
+                        <span class="file-age">10 חודשים</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--card-border);">
+                        <span style="font-size:0.85rem;color:var(--blue);font-weight:600;">&#10003; נבחרו 4 קבצים (5.1 GB)</span>
+                        <div style="display:flex;gap:8px;">
+                            <span style="font-size:0.8rem;padding:6px 16px;background:rgba(26,120,224,0.2);border-radius:8px;color:var(--blue);font-weight:600;">&#128465; העבר לפח</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar">
+                    <div class="sidebar-header">
+                        <div class="sidebar-icon">&#10024;</div>
+                        <div class="sidebar-title">המנקה</div>
+                    </div>
+                    <button class="sidebar-btn">&#128269; סרוק עכשיו</button>
+                    <div class="sidebar-cat active">
+                        <span>&#128193; הכל</span>
+                        <span class="sidebar-cat-count">127</span>
+                    </div>
+                    <div class="sidebar-cat">
+                        <span>&#127916; סרטונים</span>
+                        <span class="sidebar-cat-count">12</span>
+                    </div>
+                    <div class="sidebar-cat">
+                        <span>&#128230; ארכיונים</span>
+                        <span class="sidebar-cat-count">34</span>
+                    </div>
+                    <div class="sidebar-cat">
+                        <span>&#127912; תמונות</span>
+                        <span class="sidebar-cat-count">45</span>
+                    </div>
+                    <div class="sidebar-cat">
+                        <span>&#128196; מסמכים</span>
+                        <span class="sidebar-cat-count">28</span>
+                    </div>
+                    <div class="sidebar-cat">
+                        <span>&#127925; מוזיקה</span>
+                        <span class="sidebar-cat-count">8</span>
+                    </div>
+                    <div style="margin-top:20px;text-align:center;padding:12px;background:rgba(232,164,74,0.1);border-radius:10px;">
+                        <div style="font-size:0.75rem;color:var(--text-dim);">ניתן לפנות:</div>
+                        <div style="font-size:1.4rem;font-weight:800;color:#e8a44a;">12.6 GB</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <section class="features fade-in" id="features">
+        <div class="section-header">
+            <h2>למה <span class="gradient-text">המנקה</span>?</h2>
+            <p>כל מה שצריך כדי לשמור על המק שלך נקי ומהיר</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon blue">&#128269;</div>
+                <h3>סריקה חכמה</h3>
+                <p>סורק את ההורדות, שולחן העבודה, המסמכים ועוד - ומוצא קבצים שלא נגעת בהם חודשים.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon teal">&#128202;</div>
+                <h3>מיון לפי קטגוריות</h3>
+                <p>תמונות, סרטונים, מסמכים, ארכיונים, מוזיקה וקוד - הכל מסודר ונגיש במבט אחד.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon orange">&#128200;</div>
+                <h3>ניתוח נפח</h3>
+                <p>רואה בדיוק כמה מקום כל קובץ תופס, עם צביעה לפי גודל - אדום לקבצים הכבדים ביותר.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon purple">&#128737;</div>
+                <h3>מחיקה בטוחה</h3>
+                <p>העברה לפח כברירת מחדל - תמיד אפשר לשחזר. מחיקה לצמיתות רק כשאתה בוחר.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon pink">&#9889;</div>
+                <h3>מהיר ויעיל</h3>
+                <p>סריקה מהירה שלא מאטה את המחשב. בנוי ב-Swift עם ביצועים מקסימליים.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon cyan">&#128275;</div>
+                <h3>קוד פתוח</h3>
+                <p>בנוי בשקיפות מלאה. אפשר לראות, לתרום ולשפר. בלי מעקב, בלי מודעות, בלי תשלום.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats fade-in">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <h3>&#60;1MB</h3>
+                <p>גודל האפליקציה</p>
+            </div>
+            <div class="stat-item">
+                <h3>100%</h3>
+                <p>חינם ובקוד פתוח</p>
+            </div>
+            <div class="stat-item">
+                <h3>0</h3>
+                <p>מודעות ומעקב</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="how-it-works fade-in" id="how">
+        <div class="section-header">
+            <h2>איך זה עובד?</h2>
+            <p>שלושה צעדים פשוטים לשחרר מקום</p>
+        </div>
+
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>סרוק</h3>
+                    <p>לחץ על "סרוק עכשיו" והמנקה יסרוק את התיקיות שבחרת, ויציג את כל הקבצים שלא נגעת בהם.</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>סקור</h3>
+                    <p>עבור על הרשימה, סנן לפי קטגוריה, מיין לפי גודל או תאריך, וסמן את הקבצים שאתה רוצה למחוק.</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>נקה</h3>
+                    <p>לחץ "העבר לפח" ושחרר ג'יגות של מקום. הקבצים עוברים לפח ותמיד אפשר לשחזר.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta fade-in">
+        <div class="cta-box">
+            <h2>מוכן <span class="gradient-text">לנקות</span>?</h2>
+            <p>הורד את המנקה עכשיו ושחרר מקום יקר בדיסק שלך.</p>
+            <a href="https://github.com/arielaizn/hamenake/releases/latest/download/HaMenake-Installer.dmg" class="btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                הורד למק - חינם
+            </a>
+            <p class="download-size">macOS 13+ &bull; Apple Silicon &bull; ~700KB</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>
+            נבנה עם &#10084;&#65039; בישראל &bull;
+            <a href="https://github.com/arielaizn/hamenake" target="_blank">קוד פתוח ב-GitHub</a> &bull;
+            2026 המנקה
+        </p>
+    </footer>
+
+</div>
+
+<script>
+    // Generate stars
+    const starsEl = document.getElementById('stars');
+    for (let i = 0; i < 80; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = Math.random() * 3 + 's';
+        star.style.animationDuration = (2 + Math.random() * 3) + 's';
+        starsEl.appendChild(star);
+    }
+
+    // Scroll fade-in animation
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+</script>
+</body>
+</html>
